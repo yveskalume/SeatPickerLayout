@@ -10,9 +10,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,11 +23,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yveskalume.customlayoutcasestudy.ui.theme.Pink40
 import com.yveskalume.customlayoutcasestudy.ui.theme.Purple40
 import com.yveskalume.customlayoutcasestudy.ui.theme.Purple80
 import com.yveskalume.customlayoutcasestudy.ui.theme.PurpleGrey40
-import com.yveskalume.customlayoutcasestudy.ui.theme.PurpleGrey80
 
 
 @Composable
@@ -85,8 +83,8 @@ fun <T> SeatLayout(
 @Preview(showBackground = true)
 @Composable
 fun SeatLayoutPreview() {
-    val selectedData: SnapshotStateList<Seat> = remember {
-        mutableStateListOf()
+    val selectedData: SnapshotStateMap<Int, Seat> = remember {
+        mutableStateMapOf()
     }
     MaterialTheme {
         SeatLayout(
@@ -96,8 +94,9 @@ fun SeatLayoutPreview() {
             numberPerRow = 4,
             isAvailable = { index, item -> item.number == index && item.isAvailable }
         ) { number, item ->
+            val itemIsSelected = selectedData.containsKey(item?.id)
             val seatColor by animateColorAsState(
-                targetValue = if (selectedData.contains(item)) {
+                targetValue = if (itemIsSelected) {
                     Purple40
                 } else if (item != null) {
                     Purple80
@@ -108,7 +107,7 @@ fun SeatLayoutPreview() {
             )
 
             val seatTextColor by animateColorAsState(
-                targetValue = if (selectedData.contains(item)) {
+                targetValue = if (itemIsSelected) {
                     Color.White
                 } else if (item != null) {
                     Color.Black
@@ -123,11 +122,11 @@ fun SeatLayoutPreview() {
                     .clip(RoundedCornerShape(16.dp))
                     .background(seatColor)
                     .clickable(enabled = item != null) {
-                        if (selectedData.contains(item)) {
-                            selectedData.remove(item)
+                        if (itemIsSelected) {
+                            selectedData.remove(item?.id)
                         } else {
                             if (item != null) {
-                                selectedData.add(item)
+                                selectedData[item.id] = item
                             }
                         }
                     },
