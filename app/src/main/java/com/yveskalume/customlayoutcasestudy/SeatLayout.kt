@@ -29,14 +29,16 @@ import com.yveskalume.customlayoutcasestudy.ui.theme.PurpleGrey40
 
 
 @Composable
-fun <T> SeatLayout(
+fun <T> BusSeatLayout(
     modifier: Modifier = Modifier,
     quantity: Int,
-    numberPerRow: Int,
     data: List<T>,
     isAvailable: (index: Int, item: T) -> Boolean,
     content: @Composable (number: Int, item: T?) -> Unit
 ) {
+    check(((quantity - 5) % 4) == 0) {
+        "Number of seat should be multiple of 4, + 5(for the last range)"
+    }
     Layout(
         modifier = modifier,
         content = {
@@ -46,14 +48,15 @@ fun <T> SeatLayout(
             }
         }
     ) { measurables, constraints ->
+        val numberPerRow = 4
         val placeables = measurables.map { measurable ->
             // Measure each children
             measurable.measure(
                 constraints.copy(
-                    maxWidth = constraints.maxWidth / numberPerRow,
-                    minWidth = constraints.maxWidth / numberPerRow,
-                    maxHeight = constraints.maxWidth / numberPerRow,
-                    minHeight = constraints.maxWidth / numberPerRow
+                    maxWidth = constraints.maxWidth / (numberPerRow + 1),
+                    minWidth = constraints.maxWidth / (numberPerRow + 1),
+                    maxHeight = constraints.maxWidth / (numberPerRow + 1),
+                    minHeight = constraints.maxWidth / (numberPerRow + 1)
                 )
             )
         }
@@ -63,6 +66,8 @@ fun <T> SeatLayout(
             // Track the y co-ord we have placed children up to
             var yPosition = 0
             var xPosition = 0
+            var nextItemIndexInRow = 0
+            var rowNumber = 1
 
             // Place children in the parent layout
             placeables.forEach { placeable ->
@@ -71,9 +76,20 @@ fun <T> SeatLayout(
 
                 // Record the y co-ord placed up to
                 xPosition += placeable.measuredWidth
+                nextItemIndexInRow++
+
+                if (rowNumber == (quantity / 4)) {
+
+                } else {
+                    if (nextItemIndexInRow == 2) {
+                        xPosition += placeable.measuredWidth
+                    }
+                }
                 if (xPosition + placeable.measuredWidth > constraints.maxWidth) {
                     xPosition = 0
                     yPosition += placeable.measuredWidth
+                    nextItemIndexInRow = 0
+                    rowNumber++
                 }
             }
         }
@@ -82,18 +98,18 @@ fun <T> SeatLayout(
 
 @Preview(showBackground = true)
 @Composable
-fun SeatLayoutPreview() {
+fun BusLayoutPreview() {
     val selectedData: SnapshotStateMap<Int, Seat> = remember {
         mutableStateMapOf()
     }
     MaterialTheme {
-        SeatLayout(
+        BusSeatLayout(
             modifier = Modifier.padding(24.dp),
             data = getDataList(),
-            quantity = 28,
-            numberPerRow = 4,
+            quantity = 45,
             isAvailable = { index, item -> item.number == index && item.isAvailable }
         ) { number, item ->
+
             val itemIsSelected = selectedData.containsKey(item?.id)
             val seatColor by animateColorAsState(
                 targetValue = if (itemIsSelected) {
